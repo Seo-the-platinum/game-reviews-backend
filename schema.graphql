@@ -1,12 +1,17 @@
 type Query {
-    games: [Game]!
+    game(str: String!): Game!
+    games: [Game!]
+    reviews: [Review!]
+    user(id: String!): User!
+    users: [User!]
 }
 
 type Game {
     id: String!
     background_image: String!
     description: String!
-    publishers: [Publisher]!
+    players: [Review!]
+    publishers: [Publisher!]
     rawg_id: Int!
     released: String!
     title: String!
@@ -18,3 +23,26 @@ type Publisher {
     name: String!
 }
 
+type Review {
+    id: String!
+    context: String!
+    rating: Int!
+    user_id: String!
+    game_id: String!
+}
+
+type User {
+    id: String!
+    email: String!
+    password: String!
+    username: String!
+    games: [Review!]
+    games_list: [Game!]
+}
+
+#----------Mutations--------------
+type Mutation {
+    addUser(email: String!, password: String!, username: String!): User
+    addGame(background_image: String!, description: String!, rawg_id: Int!, released: String!, title: String!): Game
+    addReview(context: String!, rating: Int!, user_id: String!, game_id: String!): Review
+}

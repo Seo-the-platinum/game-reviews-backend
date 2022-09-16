@@ -1,5 +1,6 @@
-from ariadne import QueryType, MutationType
-from uuid import uuid4
+from __future__ import print_function
+import sys
+from ariadne import QueryType, MutationType, ObjectType
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import (
@@ -8,12 +9,11 @@ from sqlalchemy import (
     Integer,
     ForeignKey,
     )
-import os
 
 db = SQLAlchemy()
+u = ObjectType('User')
 mutation = MutationType()
 query = QueryType()
-
 database_path="postgresql://postgres:seoisoe5i73@localhost:5432/gamereviewsdb"
 
 def setup_db(app, database_path=database_path):
@@ -23,6 +23,7 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     migrate = Migrate(app, db)
 
+
 #----------Models----------
 class User(db.Model):
     __tablename__ = 'user'
@@ -30,10 +31,10 @@ class User(db.Model):
     email = Column(String(40), nullable=False)
     password = Column(String(40), nullable=False)
     username = Column(String(25), nullable=False)
-    reviews = db.relationship(
+    games = db.relationship(
         'Review',
         cascade = 'all, delete-orphan',
-        backref = db.backref('review')
+        backref = db.backref('user')
     )
     def __init__(self, email, password, username):
         self.email = email
@@ -44,12 +45,14 @@ class User(db.Model):
         db.session.add(self)
         db.session.commit()
 
+#return the games relationship so graphql has access to it along with other values
     def format(self):
         return {
             'id': self.id,
             'email': self.email,
             'password': self.password,
             'username': self.username,
+            'games' : self.games
         }
 class Game(db.Model):
     __tablename__ = 'game'
@@ -59,10 +62,10 @@ class Game(db.Model):
     rawg_id = Column(Integer, nullable=False)
     released = Column(String(25), nullable=False)
     title = Column(String(25), nullable=False)
-    reviews = db.relationship(
+    players = db.relationship(
         'Review',
         cascade = 'all, delete-orphan',
-        backref = db.backref('review')
+        backref = db.backref('game')
     )
 
     def __init__(self, background_image, description, rawg_id, released, title):
@@ -75,12 +78,14 @@ class Game(db.Model):
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    
+
+    #return the players relationship so graphql has access to it
     def format(self):
         return {
             'id': self.id,
             'background_image': self.background_image,
             'description': self.description,
+            'players' : self.players,
             'rawg_id' : self.rawg_id,
             'released': self.released,
             'title': self.title
@@ -89,22 +94,22 @@ class Game(db.Model):
 class Review(db.Model):
     __tablename__ = 'review'
     id = Column(Integer, primary_key=True)
+    context = Column(String(200), nullable=True)
     game_id = Column(
         Integer,
         ForeignKey('game.id'),
         nullable=False
     )
     rating = Column(Integer, nullable=True)
-    context = Column(String(200), nullable=True)
     user_id = Column(
         Integer,
         ForeignKey('user.id'),
         nullable = False
     )
 
-    def __init__(self, rating, review,):
+    def __init__(self, rating, context,):
         self.rating = rating
-        self.review = review
+        self.context = context
     
     def insert(self):
         db.session.add(self)
@@ -114,10 +119,59 @@ class Review(db.Model):
         return {
             'id': self.id,
             'rating': self.rating,
-            'review': self.review,
+            'context': self.context,
+            'user_id': self.user_id,
+            'game_id': self.game_id,
         }
 
 #----------Resolvers----------
+
+@query.field('game')
+def game(*_, str=None):
+    return Game.query.filter(Game.title == str).one_or_none()
+
 @query.field('games')
 def games(*_):
     return [game.format() for game in Game.query.all()]
+
+@query.field('user')
+def user(*_, id=None):
+    user = User.query.filter(User.id == id).one_or_none()
+    return user
+
+@query.field('users')
+def users(*_):
+    return [ user.format() for user in User.query.all()]
+
+@query.field('reviews')
+def reviews(*_):
+    return [ review.format() for review in Review.query.all()]
+
+@u.field('games_list')
+def getGames(obj, info):
+    formattedGames = []
+    for review in obj.games:
+        game = Game.query.get(review.game_id)
+        formattedGames.append(game.format())
+    return formattedGames
+    
+#-------Mutations-----------
+@mutation.field('addUser')
+def add_user(_, info, email, password, username):
+    newUser = User(email, password, username)
+    newUser.insert()
+    return newUser
+
+@mutation.field('addGame')
+def add_game(_, info, background_image, description, rawg_id, released, title):
+    exists = Game.query.filter(Game.rawg_id == rawg_id).one_or_none()
+    if exists == None:
+        newGame = Game(background_image, description, rawg_id, released, title)
+        newGame.insert()
+        return newGame
+
+@mutation.field('addReview')
+def add_review(_, info, context, game_id, rating, user_id):
+    newReview = Review(context, game_id, rating, user_id)
+    newReview.insert()
+    return newReview

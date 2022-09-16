@@ -1,4 +1,4 @@
-#!/Users/eliseoflores/Projects/game-reviews-backend/venv/bin/python3
+#!/Users/eliseoflores/Projects/game-reviews-backend/venv/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys
