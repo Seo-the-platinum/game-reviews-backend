@@ -1,8 +1,10 @@
 type Query {
     game(str: String!): Game!
     games: [Game!]
+    gameById(id: String!): Game!
     reviews: [Review!]
     user(id: String!): User!
+    userLogin(string: String!, password: String!): User!
     users: [User!]
 }
 
@@ -37,7 +39,6 @@ type User {
     password: String!
     username: String!
     games: [Review!]
-    games_list: [Game!]
 }
 
 #----------Mutations--------------

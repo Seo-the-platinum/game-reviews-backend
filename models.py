@@ -11,7 +11,6 @@ from sqlalchemy import (
     )
 
 db = SQLAlchemy()
-u = ObjectType('User')
 mutation = MutationType()
 query = QueryType()
 database_path="postgresql://postgres:seoisoe5i73@localhost:5432/gamereviewsdb"
@@ -130,6 +129,11 @@ class Review(db.Model):
 def game(*_, str=None):
     return Game.query.filter(Game.title == str).one_or_none()
 
+@query.field('gameById')
+def gameById(*_, id):
+    game = Game.query.filter(Game.id == id).one_or_none()
+    return game
+
 @query.field('games')
 def games(*_):
     return [game.format() for game in Game.query.all()]
@@ -139,6 +143,13 @@ def user(*_, id=None):
     user = User.query.filter(User.id == id).one_or_none()
     return user
 
+@query.field('userLogin')
+def userLogin(*_, string, password):
+    user = User.query.filter((User.email == string) | (User.username == string)).first()
+    if user.password == password:
+        return user
+    return 'Fail'
+    
 @query.field('users')
 def users(*_):
     return [ user.format() for user in User.query.all()]
@@ -147,14 +158,6 @@ def users(*_):
 def reviews(*_):
     return [ review.format() for review in Review.query.all()]
 
-@u.field('games_list')
-def getGames(obj, info):
-    formattedGames = []
-    for review in obj.games:
-        game = Game.query.get(review.game_id)
-        formattedGames.append(game.format())
-    return formattedGames
-    
 #-------Mutations-----------
 @mutation.field('addUser')
 def add_user(_, info, email, password, username):

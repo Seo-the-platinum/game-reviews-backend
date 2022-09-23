@@ -2,14 +2,16 @@ from flask import Flask, request, jsonify
 from ariadne import graphql_sync, make_executable_schema, gql, load_schema_from_path
 from ariadne.constants import PLAYGROUND_HTML
 from ariadne.asgi import GraphQL
-from models import query, mutation, u, setup_db
+from models import query, mutation, setup_db
+from flask_cors import CORS
 
 def create_app(test_config=None):
     app = Flask(__name__)
     setup_db(app)
+    CORS(app)
 
     type_defs = gql(load_schema_from_path("./schema.graphql"))
-    schema = make_executable_schema(type_defs, query, mutation, u)
+    schema = make_executable_schema(type_defs, query, mutation)
     
     @app.route("/graphql", methods=["GET"])
     def graphql_playground():
