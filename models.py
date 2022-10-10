@@ -106,9 +106,11 @@ class Review(db.Model):
         nullable = False
     )
 
-    def __init__(self, rating, context,):
+    def __init__(self, context, game_id, rating, user_id):
         self.rating = rating
         self.context = context
+        self.game_id = game_id
+        self.user_id = user_id
     
     def insert(self):
         db.session.add(self)
@@ -175,6 +177,8 @@ def add_game(_, info, background_image, description, rawg_id, released, title):
 
 @mutation.field('addReview')
 def add_review(_, info, context, game_id, rating, user_id):
-    newReview = Review(context, game_id, rating, user_id)
-    newReview.insert()
-    return newReview
+    exists = Review.query.filter(Review.game_id == game_id and Review.user_id == user_id).one_or_none()
+    if exists == None:
+        newReview = Review(context, game_id, rating, user_id)
+        newReview.insert()
+        return newReview
