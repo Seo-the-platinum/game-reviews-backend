@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys
 from ariadne import QueryType, MutationType, ObjectType
 from flask_sqlalchemy import SQLAlchemy
@@ -9,6 +8,7 @@ from sqlalchemy import (
     Integer,
     ForeignKey,
     )
+from re import search
 
 db = SQLAlchemy()
 mutation = MutationType()
@@ -127,9 +127,15 @@ class Review(db.Model):
 
 #----------Resolvers----------
 
-@query.field('game')
-def game(*_, str=None):
-    return Game.query.filter(Game.title == str).one_or_none()
+@query.field('gamesByString')
+def gamesByString(*_, str=None):
+    matches = []
+    games = Game.query.all()
+    for game in games:
+        loweredTitle = game.title.lower()
+        if loweredTitle.find(str.lower()) != -1:
+            matches.append(game)
+    return matches
 
 @query.field('gameById')
 def gameById(*_, id):
