@@ -7,6 +7,7 @@ from sqlalchemy import (
     String,
     Integer,
     ForeignKey,
+    Text
     )
 from re import search
 
@@ -20,7 +21,7 @@ def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
-    migrate = Migrate(app, db)
+    migrate = Migrate(app, db, compare_type=True)
 
 
 #----------Models----------
@@ -57,7 +58,7 @@ class Game(db.Model):
     __tablename__ = 'game'
     id = Column(Integer, primary_key=True)
     background_image = Column(String(200), nullable=False)
-    description = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
     rawg_id = Column(Integer, nullable=False)
     released = Column(String(25), nullable=False)
     title = Column(String(25), nullable=False)
