@@ -61,7 +61,7 @@ class Game(db.Model):
     description = Column(Text, nullable=False)
     rawg_id = Column(Integer, nullable=False)
     released = Column(String(25), nullable=False)
-    title = Column(String(25), nullable=False)
+    title = Column(String(50), nullable=False)
     players = db.relationship(
         'Review',
         cascade = 'all, delete-orphan',
@@ -137,7 +137,7 @@ def gamesByString(*_, str=None):
         if loweredTitle.find(str.lower()) != -1:
             matches.append(game)
     return matches
-
+    
 @query.field('gameById')
 def gameById(*_, id):
     game = Game.query.filter(Game.id == id).one_or_none()
@@ -145,7 +145,7 @@ def gameById(*_, id):
 
 @query.field('games')
 def games(*_):
-    return [game.format() for game in Game.query.all()]
+    return [game.format() for game in Game.query.limit(5).all()]
 
 @query.field('user')
 def user(*_, id=None):
@@ -154,7 +154,7 @@ def user(*_, id=None):
 
 @query.field('userLogin')
 def userLogin(*_, string, password):
-    user = User.query.filter((User.email == string) | (User.username == string)).first()
+    user = User.query.filter((User.email.ilike(string)) | (User.username.ilike(string))).first()
     if user.password == password:
         return user
     return 'Fail'
