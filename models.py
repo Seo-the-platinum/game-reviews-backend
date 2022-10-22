@@ -184,7 +184,7 @@ def add_game(_, info, background_image, description, rawg_id, released, title):
 
 @mutation.field('addReview')
 def add_review(_, info, context, game_id, rating, user_id):
-    exists = Review.query.filter(Review.game_id == game_id and Review.user_id == user_id).one_or_none()
+    exists = Review.query.filter(Review.game_id == game_id, Review.user_id == user_id).one_or_none()
     if exists == None:
         newReview = Review(context, game_id, rating, user_id)
         newReview.insert()
