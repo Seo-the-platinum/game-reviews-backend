@@ -9,6 +9,7 @@ from sqlalchemy import (
     Text
     )
 from re import search
+from flask import jsonify
 
 db = SQLAlchemy()
 mutation = MutationType()
@@ -169,9 +170,11 @@ def reviews(*_):
 #-------Mutations-----------
 @mutation.field('addUser')
 def add_user(_, info, email, password, username):
-    newUser = User(email, password, username)
-    newUser.insert()
-    return newUser
+    exists = User.query.filter(User.email == email).one_or_none()
+    if exists == None:
+        newUser = User(email, password, username)
+        newUser.insert()
+        return newUser
 
 @mutation.field('addGame')
 def add_game(_, info, background_image, description, rawg_id, released, title):
