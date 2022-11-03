@@ -23,7 +23,7 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     migrate = Migrate(app, db, compare_type=True)
-
+    db.create_all()
 
 #----------Models----------
 class User(db.Model):
