@@ -10,12 +10,13 @@ from sqlalchemy import (
     )
 from re import search
 from flask import jsonify
+import os
 
 db = SQLAlchemy()
 mutation = MutationType()
 query = QueryType()
-database_path="postgresql://postgres:seoisoe5i73@localhost:5432/gamereviewsdb"
-#database_path=(os.environ.get('DATABASE_URI'))
+#database_path="postgresql://postgres:seoisoe5i73@localhost:5432/gamereviewsdb"
+database_path=(os.environ.get('DATABASE_URI'))
 def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
