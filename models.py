@@ -1,4 +1,4 @@
-from ariadne import QueryType, MutationType, ObjectType
+from ariadne import QueryType, MutationType
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import (
@@ -9,7 +9,6 @@ from sqlalchemy import (
     Text
     )
 from re import search
-from flask import jsonify
 import os
 
 db = SQLAlchemy()
@@ -151,6 +150,7 @@ def games(*_):
 @query.field('user')
 def user(*_, id=None):
     user = User.query.filter(User.id == id).one_or_none()
+    print(user.games)
     return user
 
 @query.field('userLogin')
